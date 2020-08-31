@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -60,6 +61,14 @@ func (s *IOStreams) IsStdoutTTY() bool {
 	}
 	if stdout, ok := s.Out.(*os.File); ok {
 		return isTerminal(stdout)
+	} else if runtime.GOOS == "windows" {
+		if _, ok := s.Out.(*colorableWriter); ok {
+			// when we create a colorableOut the library checks for us internally
+			// whether or not stdout is a terminal or a pipe. If it's a pipe, it
+			// just returns a file. Thus, we know that a terminal is attached if we
+			// got a colorable.Writer instead of a file.
+			return true
+		}
 	}
 	return false
 }
